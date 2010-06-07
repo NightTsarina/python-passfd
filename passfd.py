@@ -51,16 +51,15 @@ For more information, see one of the R. Stevens' books:
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#/
+#
 
 import os, socket
 
 def __check_socket(sock):
-    if isinstance(sock, socket.socket):
+    if isinstance(sock,  (socket.SocketType, socket._socket.socket)):
         if sock.family != socket.AF_UNIX:
             raise ValueError("Only AF_UNIX sockets are allowed")
         sock = sock.fileno()
-
     if not isinstance(sock, int):
         raise TypeError("An socket object or file descriptor was expected")
 
@@ -90,6 +89,6 @@ def recvfd(sock, msg_buf = 4096, open_args = []):
     if ret == -3:
         raise RuntimeError("The received file descriptor is not valid")
     assert ret >= 0
-    
-    file = os.fdopen([ ret ] + open_args)
+
+    file = os.fdopen(ret, *open_args)
     return (file, msg)
