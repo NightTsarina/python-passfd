@@ -1,7 +1,11 @@
-SRC = src/
-TEST = t/
-BUILDDIR = build/lib/
-DISTDIR = dist/
+SRC = src
+TEST = t
+BUILDDIR = build
+DISTDIR = dist
+
+# Gah
+SUBBUILDDIR = $(shell python -c 'import distutils.util, sys; print "lib.%s-%s" % (distutils.util.get_platform(), sys.version[0:3])')
+BUILDDIR := $(BUILDDIR)/$(SUBBUILDDIR)
 
 COVERAGE = $(or $(shell which coverage), $(shell which python-coverage), \
 	   coverage)
@@ -25,12 +29,12 @@ coverage: all
 		set -e; \
 		PYTHONPATH="$(BUILDDIR):$$PYTHONPATH" $(COVERAGE) -x $$i; \
 		done
-	$(COVERAGE) -r -m `find "$(SRC)" -name \\*.py -type f`
+	$(COVERAGE) -r -m `find "$(BUILDDIR)" -name \\*.py -type f`
 	rm -f .coverage
 
 clean:
 	./setup.py clean
-	rm -f `find -name \*.pyc` .coverage *.pcap
+	rm -f `find -name \*.pyc` .coverage
 
 distclean: clean
 	rm -rf "$(DISTDIR)"

@@ -77,7 +77,7 @@ def __check_fd(fd):
 
     return fd
 
-def sendfd(sock, fd, message = None):
+def sendfd(sock, fd, message = "NONE"):
     import _passfd
     return _passfd.sendfd(__check_socket(sock), __check_fd(fd), message)
 
