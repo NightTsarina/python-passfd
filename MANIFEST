@@ -1,5 +1,9 @@
-COPYING
-passfd.c
-passfd.py
-setup.cfg
 setup.py
+COPYING
+setup.cfg
+t/test_passfd.py
+dist/python-passfd-0.1.tar.gz
+src/passfd.c
+src/passfd.py
+src/passfd.pyc
+Makefile
