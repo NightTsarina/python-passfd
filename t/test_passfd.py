@@ -83,6 +83,24 @@ class TestPassfd(unittest.TestCase):
         assert sendfd(s, f, "writing") == 7
         s.recv(1)
 
+    def test_sanity_checks(self):
+        self.assertRaises(TypeError, recvfd, "foo")
+        s = socket.socket(socket.AF_INET)
+        self.assertRaises(ValueError, recvfd, s)
+
+        (s0, s1) = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM, 0)
+        f = file("/dev/zero")
+        sendfd(s0, f)
+        recvfd(s1)
+
+        # Using integers
+        sendfd(s0.fileno(), f.fileno())
+        recvfd(s1.fileno())
+
+        self.assertRaises(TypeError, sendfd, s0, "foo")
+        # Assuming fd 255 is not valid
+        self.assertRaises(OSError, sendfd, s0, 255)
+
     def test_passfd_stream(self):
         (s0, s1) = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         pid = os.fork()
