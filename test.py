@@ -44,7 +44,6 @@ class TestPassfd(unittest.TestCase):
         self.vrfy_recv(recvfd(s), "foobar")
         s.send("a")
         self.vrfy_recv(recvfd(s, msg_buf = 11), "long string") # is long
-        s.send("a")
         self.assertEquals(s.recv(8), " is long") # re-sync
         s.send("a")
         self.assertEquals(s.recv(100), "foobar")
@@ -53,9 +52,10 @@ class TestPassfd(unittest.TestCase):
         #
         s.send("a")
         self.assertRaises(OSError, recvfd, s, 4096, ['w']) # Trying to write
-#        (f, msg) = recvfd(s, open_args = [ "w" ])
-#        self.assertEquals(msg, "writing")
-#        f.write("foo")
+        s.send("a")
+        (f, msg) = recvfd(s, open_args = [ "w" ])
+        self.assertEquals(msg, "writing")
+        f.write("foo")
         s.send("a")
 
     def child_tests(self, s):
@@ -77,6 +77,9 @@ class TestPassfd(unittest.TestCase):
         assert s.send("barbaz") == 6
         # Try to write!
         s.recv(1)
+        assert sendfd(s, f, "writing") == 7
+        s.recv(1)
+        f = file("/dev/null", "w")
         assert sendfd(s, f, "writing") == 7
         s.recv(1)
 
