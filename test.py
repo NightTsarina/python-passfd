@@ -21,6 +21,7 @@
 
 import os, unittest, socket, sys
 from passfd import sendfd, recvfd
+import _passfd
 
 class TestPassfd(unittest.TestCase):
     def readfd_test(self, fd):
@@ -35,49 +36,77 @@ class TestPassfd(unittest.TestCase):
 
     def parent_tests(self, s):
         # First message is not even sent
+        s.send("a")
         self.vrfy_recv(recvfd(s), "a")
+        s.send("a")
         self.vrfy_recv(recvfd(s), "\0")
+        s.send("a")
         self.vrfy_recv(recvfd(s), "foobar")
+        s.send("a")
         self.vrfy_recv(recvfd(s, msg_buf = 11), "long string") # is long
+        s.send("a")
         self.assertEquals(s.recv(8), " is long") # re-sync
+        s.send("a")
         self.assertEquals(s.recv(100), "foobar")
+        s.send("a")
         self.assertRaises(RuntimeError, recvfd, s) # No fd received
+        #
+        s.send("a")
+        self.assertRaises(OSError, recvfd, s, 4096, ['w']) # Trying to write
+#        (f, msg) = recvfd(s, open_args = [ "w" ])
+#        self.assertEquals(msg, "writing")
+#        f.write("foo")
+        s.send("a")
 
     def child_tests(self, s):
         f = file("/dev/zero")
         assert sendfd(s, f, "") == 0
+        s.recv(1)
         assert sendfd(s, f, "a") == 1
+        s.recv(1)
         assert sendfd(s, f, "\0") == 1
+        s.recv(1)
         assert sendfd(s, f, "foobar") == 6
+        s.recv(1)
         assert sendfd(s, f, "long string is long") == 19
         # The other side will recv() instead of recvmsg(), this fd would be
         # lost. I couldn't find any specification on this semantic
+        s.recv(1)
         assert sendfd(s, f, "foobar") == 6
+        s.recv(1)
         assert s.send("barbaz") == 6
         # Try to write!
+        s.recv(1)
         assert sendfd(s, f, "writing") == 7
+        s.recv(1)
 
-    def test_passfd(self):
-        (stream0, stream1) = socket.socketpair(socket.AF_UNIX,
-                socket.SOCK_STREAM, 0)
-        (dgram0, dgram1) = socket.socketpair(socket.AF_UNIX,
-                socket.SOCK_DGRAM, 0)
+    def test_passfd_stream(self):
+        (s0, s1) = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         pid = os.fork()
         if pid == 0:
-            stream0.close()
-            dgram0.close()
-            self.child_tests(stream1)
-            self.child_tests(dgram1)
-            stream1.close()
-            dgram1.close()
+            s0.close()
+            self.child_tests(s1)
+            s1.close()
             os._exit(0)
 
-        stream1.close()
-        dgram1.close()
-        self.parent_tests(stream0)
-        self.parent_tests(dgram0)
-        stream0.close()
-        dgram0.close()
+        s1.close()
+        self.parent_tests(s0)
+        s0.close()
+
+        self.assertEquals(os.waitpid(pid, 0)[1], 0)
+
+    def _test_passfd_dgram(self):
+        (s0, s1) = socket.socketpair(socket.AF_UNIX, socket.SOCK_DGRAM, 0)
+        pid = os.fork()
+        if pid == 0:
+            s0.close()
+            self.child_tests(s1)
+            s1.close()
+            os._exit(0)
+
+        s1.close()
+        self.parent_tests(s0)
+        s0.close()
 
         self.assertEquals(os.waitpid(pid, 0)[1], 0)
 

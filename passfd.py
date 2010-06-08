@@ -56,19 +56,22 @@ For more information, see one of the R. Stevens' books:
 import os, socket
 
 def __check_socket(sock):
-    if isinstance(sock,  (socket.SocketType, socket._socket.socket)):
+    try:
         if sock.family != socket.AF_UNIX:
             raise ValueError("Only AF_UNIX sockets are allowed")
         sock = sock.fileno()
+    except AttributeError:
+        pass
     if not isinstance(sock, int):
         raise TypeError("An socket object or file descriptor was expected")
 
     return sock
 
 def __check_fd(fd):
-    if isinstance(fd, file):
+    try:
         fd = fd.fileno()
-
+    except AttributeError:
+        pass
     if not isinstance(fd, int):
         raise TypeError("An file object or file descriptor was expected")
 
