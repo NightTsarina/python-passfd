@@ -56,12 +56,12 @@ For more information, see one of the R. Stevens' books:
 import os, socket
 
 def __check_socket(sock):
-    try:
-        if sock.family != socket.AF_UNIX:
-            raise ValueError("Only AF_UNIX sockets are allowed")
+    if hasattr(sock, 'family') and sock.family != socket.AF_UNIX:
+        raise ValueError("Only AF_UNIX sockets are allowed")
+
+    if hasattr(sock, 'fileno'):
         sock = sock.fileno()
-    except AttributeError:
-        pass
+
     if not isinstance(sock, int):
         raise TypeError("An socket object or file descriptor was expected")
 
