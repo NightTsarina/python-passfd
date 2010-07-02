@@ -25,10 +25,8 @@ import _passfd
 
 class TestPassfd(unittest.TestCase):
     def readfd_test(self, fd):
-        s = fd.read(512)
-        self.assertEquals(len(s), 512)
-        for i in s:
-            self.assertEquals(i, "\0")
+        s = os.read(fd, 512)
+        self.assertEquals(s, "\0" * 512)
 
     def vrfy_recv(self, tuple, msg):
         self.readfd_test(tuple[0])
@@ -51,11 +49,12 @@ class TestPassfd(unittest.TestCase):
         self.assertRaises(RuntimeError, recvfd, s) # No fd received
         #
         s.send("a")
-        self.assertRaises(OSError, recvfd, s, 4096, ['w']) # Trying to write
+        f, m = recvfd(s)
+        self.assertRaises(OSError, os.fdopen, f, "w")
         s.send("a")
-        (f, msg) = recvfd(s, open_args = [ "w" ])
+        (f, msg) = recvfd(s)
         self.assertEquals(msg, "writing")
-        f.write("foo")
+        os.write(f, "foo")
         s.send("a")
 
     def child_tests(self, s):

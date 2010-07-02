@@ -78,10 +78,39 @@ def __check_fd(fd):
     return fd
 
 def sendfd(sock, fd, message = "NONE"):
+    """Sends a message and piggybacks a file descriptor through a Unix
+    domain socket.
+
+    Note that the file descriptor cannot be sent by itself, at least
+    one byte of payload needs to be sent also.
+
+    Parameters:
+     sock:    socket object or file descriptor for an AF_UNIX socket
+     fd:      file object or file descriptor to pass
+     message: message to send
+
+    Return value:
+    On success, sendfd returns the number of bytes sent, not including
+    the file descriptor nor the control data.  If there was no message
+    to send, 0 is returned."""
+    
     import _passfd
     return _passfd.sendfd(__check_socket(sock), __check_fd(fd), message)
 
-def recvfd(sock, msg_buf = 4096, open_args = []):
+def recvfd(sock, msg_buf = 4096):
+    """Receive a message and a file descriptor from a Unix domain socket.
+    
+    Parameters:
+     sock:       file descriptor or socket object for an AF_UNIX socket
+     buffersize: maximum message size to receive
+
+    Return value:
+    On success, recvfd returns a tuple containing the received
+    file descriptor and message. If recvmsg fails, an OSError exception
+    is raised. If the received data does not carry exactly one file
+    descriptor, or if the received file descriptor is not valid,
+    RuntimeError is raised."""
+
     import _passfd
     (ret, msg) = _passfd.recvfd(__check_socket(sock), msg_buf)
 
@@ -93,5 +122,4 @@ def recvfd(sock, msg_buf = 4096, open_args = []):
         raise RuntimeError("The received file descriptor is not valid")
     assert ret >= 0
 
-    file = os.fdopen(ret, *open_args)
-    return (file, msg)
+    return (ret, msg)

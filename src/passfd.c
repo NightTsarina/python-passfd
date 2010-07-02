@@ -85,32 +85,9 @@ recvfd(PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef methods[] = {
-    {"sendfd", sendfd, METH_VARARGS, "rv = sendfd(sock, fd, message): "
-        "send a message and piggyback\n" "a file descriptor.\n\n"
-            "Note that the file descriptor cannot be sent by itself, at\n"
-            "least one byte of payload needs to be sent.\n\n"
-            "Parameters:\n"
-            " sock:    file descriptor for an AF_UNIX socket\n"
-            " fd:      file descriptor to pass\n"
-            " message: message to send\n\n"
-            "Return value:\n"
-            "On success, sendfd returns the number of characters from the\n"
-            "message sent, the file descriptor information is not taken into\n"
-            "account. If there was no message to send, 0 is returned. On \n"
-            "error, -1 is returned, and errno is set appropriately.\n" },
+    {"sendfd", sendfd, METH_VARARGS, "rv = sendfd(sock, fd, message)"},
     {"recvfd", recvfd, METH_VARARGS, "(fd, message) = recvfd(sock, "
-        "buffersize = 4096)" ": receive \n"
-            "a message and a file descriptor.\n\n"
-            "Parameters:\n"
-            " sock:       file descriptor for an AF_UNIX socket\n"
-            " buffersize: maximum message size to receive\n\n"
-            "Return value:\n"
-            "On success, recvfd returns a tuple containing the received\n"
-            "file descriptor and message. If recvmsg fails, an exception is\n"
-            "raised. If the received data does not carry exactly one file\n"
-            "descriptor, -2 is returned as the first element of the tuple.\n"
-            "If the received file descriptor is not valid, -3 is returned.\n"
-    },
+        "buffersize = 4096)"},
     {NULL, NULL, 0, NULL}
 };
 
