@@ -10,7 +10,7 @@ module1 = Extension('_passfd', sources = ['src/passfd.c'])
 
 setup(
         name        = 'python-passfd',
-        version     = '0.1',
+        version     = '0.2',
         description = 'Python functions to pass file descriptors across ' +
         'UNIX domain sockets',
         long_description = passfd.__doc__,
