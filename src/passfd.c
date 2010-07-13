@@ -47,12 +47,23 @@ int _recvfd(int sock, size_t *len, void *buf);
 static PyObject *
 sendfd(PyObject *self, PyObject *args) {
     const char *message;
+    char *buf;
     int ret, sock, fd, message_len;
 
     if(!PyArg_ParseTuple(args, "iis#", &sock, &fd, &message, &message_len))
         return NULL;
 
+    /* I don't know if I need to make a copy of the message buffer for thread
+     * safety, but let's do it just in case... */
+    buf = strndup(message, (size_t)message_len);
+    if(buf == NULL)
+        return PyErr_SetFromErrno(PyExc_OSError);
+
+    Py_BEGIN_ALLOW_THREADS;
     ret = _sendfd(sock, fd, message_len, message);
+    Py_END_ALLOW_THREADS;
+
+    free(buf);
     if(ret == -1)
         return PyErr_SetFromErrno(PyExc_OSError);
     return Py_BuildValue("i", ret);
@@ -73,7 +84,11 @@ recvfd(PyObject *self, PyObject *args) {
         return PyErr_SetFromErrno(PyExc_OSError);
 
     _buffersize = buffersize;
+
+    Py_BEGIN_ALLOW_THREADS;
     ret = _recvfd(sock, &_buffersize, buffer);
+    Py_END_ALLOW_THREADS;
+
     buffersize = (int)_buffersize;
     if(ret == -1) {
         free(buffer);
@@ -130,6 +145,10 @@ int _sendfd(int sock, int fd, size_t len, const void *msg) {
     /* At least one byte needs to be sent, for some reason (?) */
     if(len < 1)
         return 0;
+
+    memset(&iov[0], 0, sizeof(struct iovec));
+    memset(&msgh, 0, sizeof(struct msghdr));
+    memset(buf, 0, CMSG_SIZE);
 
     msgh.msg_name       = NULL;
     msgh.msg_namelen    = 0;

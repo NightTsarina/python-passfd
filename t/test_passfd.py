@@ -19,7 +19,7 @@
 # Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-import os, unittest, socket, sys
+import os, unittest, socket, sys, threading
 from passfd import sendfd, recvfd
 import _passfd
 
@@ -32,32 +32,33 @@ class TestPassfd(unittest.TestCase):
         self.readfd_test(tuple[0])
         self.assertEquals(tuple[1], msg)
 
-    def parent_tests(self, s):
+    def parent_tests(self, s, dgram = False):
         # First message is not even sent
-        s.send("a")
+        s.send("1")
         self.vrfy_recv(recvfd(s), "a")
-        s.send("a")
+        s.send("2")
         self.vrfy_recv(recvfd(s), "\0")
-        s.send("a")
+        s.send("3")
         self.vrfy_recv(recvfd(s), "foobar")
-        s.send("a")
+        s.send("4")
         self.vrfy_recv(recvfd(s, msg_buf = 11), "long string") # is long
-        self.assertEquals(s.recv(8), " is long") # re-sync
-        s.send("a")
+        if not dgram:
+            self.assertEquals(s.recv(8), " is long") # re-sync
+        s.send("5")
         self.assertEquals(s.recv(100), "foobar")
-        s.send("a")
+        s.send("6")
         self.assertRaises(RuntimeError, recvfd, s) # No fd received
         #
-        s.send("a")
+        s.send("7")
         f, m = recvfd(s)
         self.assertRaises(OSError, os.fdopen, f, "w")
-        s.send("a")
+        s.send("8")
         (f, msg) = recvfd(s)
         self.assertEquals(msg, "writing")
         os.write(f, "foo")
-        s.send("a")
+        s.send("9")
 
-    def child_tests(self, s):
+    def child_tests(self, s, dgram = False):
         f = file("/dev/zero")
         assert sendfd(s, f, "") == 0
         s.recv(1)
@@ -115,20 +116,34 @@ class TestPassfd(unittest.TestCase):
 
         self.assertEquals(os.waitpid(pid, 0)[1], 0)
 
-    def _test_passfd_dgram(self):
+    def test_passfd_dgram(self):
         (s0, s1) = socket.socketpair(socket.AF_UNIX, socket.SOCK_DGRAM, 0)
         pid = os.fork()
         if pid == 0:
             s0.close()
-            self.child_tests(s1)
+            self.child_tests(s1, dgram = True)
             s1.close()
             os._exit(0)
 
         s1.close()
-        self.parent_tests(s0)
+        self.parent_tests(s0, dgram = True)
         s0.close()
 
         self.assertEquals(os.waitpid(pid, 0)[1], 0)
+
+    def test_threading(self):
+        # Check that the GIL is correctly released before blocking
+        (s0, s1) = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM, 0)
+
+        def run_server(s):
+            self.child_tests(s)
+            s.close()
+
+        t = threading.Thread(target = run_server, args = (s1,))
+        t.start()
+        self.parent_tests(s0)
+        s0.close()
+        t.join()
 
 if __name__ == '__main__':
     unittest.main()
