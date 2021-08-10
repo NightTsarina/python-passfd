@@ -25,7 +25,7 @@ For more information, see one of the R. Stevens' books:
 # Please note that this only supports BSD-4.3+ style file descriptor passing,
 # and was only tested on Linux. Patches are welcomed!
 #
-# Copyright © 2010 Martín Ferrari <martin.ferrari@gmail.com>
+# Copyright © 2010 Martina Ferrari <tina@tina.pm>
 #
 # Inspired by Socket::PassAccessRights, which is:
 #   Copyright (c) 2000 Sampo Kellomaki <sampo@iki.fi>

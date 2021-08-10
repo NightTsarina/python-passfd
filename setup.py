@@ -14,8 +14,8 @@ setup(
         description = 'Python functions to pass file descriptors across ' +
         'UNIX domain sockets',
         long_description = passfd.__doc__,
-        author      = 'Martin Ferrari',
-        author_email = 'martin.ferrari@gmail.com',
+        author      = 'Martina Ferrari',
+        author_email = 'tina@tina.pm',
         url         = 'http://code.google.com/p/python-passfd/',
         license     = 'GPLv2',
         platforms   = 'Linux',

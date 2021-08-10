@@ -2,7 +2,7 @@
 # vim: set fileencoding=utf-8
 # vim: ts=4:sw=4:et:ai:sts=4
 
-# Copyright © 2010 Martín Ferrari <martin.ferrari@gmail.com>
+# Copyright © 2010 Martina Ferrari <tina@tina.pm>
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
